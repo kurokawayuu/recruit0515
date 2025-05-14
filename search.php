@@ -215,12 +215,7 @@ $search_query_obj = new WP_Query($search_args);
     margin-bottom: 25px;
 }
 
-.search-title, .search-results-title {
-    font-size: 24px;
-    margin-bottom: 15px;
-    font-weight: bold;
-    color: #333;
-}
+
 </style>
 
 <script>
@@ -292,22 +287,36 @@ document.addEventListener('DOMContentLoaded', function() {
                     $job_types = get_the_terms(get_the_ID(), 'job_type');
                     $job_positions = get_the_terms(get_the_ID(), 'job_position');
                     
-                    // 施設形態のスラッグを配列で取得
-                    $facility_slugs = array();
-                    if ($facility_types && !is_wp_error($facility_types)) {
-                        foreach ($facility_types as $type) {
-                            $facility_slugs[] = $type->slug;
-                        }
-                    }
-                    
-                    // 放デイと児発支援のフラグを設定
-                    $has_houkago = in_array('houkago-day', $facility_slugs) || 
-                                  in_array('houkago', $facility_slugs) || 
-                                  in_array('houkago-dayservice', $facility_slugs);
-                    
-                    $has_jidou = in_array('jidou-hattatsu', $facility_slugs) || 
-                                in_array('jidou', $facility_slugs) || 
-                                in_array('jidou-hattatsu-shien', $facility_slugs);
+                    // 施設形態のチェック
+$has_jidou = false;    // 児童発達支援フラグ
+$has_houkago = false;  // 放課後等デイサービスフラグ
+
+if ($facility_types && !is_wp_error($facility_types)) {
+    foreach ($facility_types as $type) {
+        // 組み合わせタイプのチェック
+        if ($type->slug === 'jidou-houkago') {
+            // 児童発達支援・放課後等デイの場合は両方表示
+            $has_jidou = true;
+            $has_houkago = true;
+        } 
+        // 児童発達支援のみのチェック
+        else if ($type->slug === 'jidou') {
+            $has_jidou = true;
+        } 
+        // 放課後等デイサービスのみのチェック
+        else if ($type->slug === 'houkago') {
+            $has_houkago = true;
+        }
+        
+        // 従来の拡張スラッグもサポート（必要に応じて）
+        else if (in_array($type->slug, ['jidou-hattatsu', 'jidou-hattatsu-shien', 'child-development-support'])) {
+            $has_jidou = true;
+        }
+        else if (in_array($type->slug, ['houkago-day', 'houkago-dayservice', 'after-school-day-service'])) {
+            $has_houkago = true;
+        }
+    }
+}
                     
                     // 雇用形態に基づくカラークラスを設定
                     $employment_color_class = '';
@@ -458,22 +467,23 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
                 
                 <?php endwhile; ?>
-                
-                <!-- ページネーション -->
-                <div class="pagination">
-                    <?php
-                    echo paginate_links(array(
-                        'base' => get_pagenum_link(1) . '%_%',
-                        'format' => 'page/%#%/',
-                        'current' => max(1, get_query_var('paged')),
-                        'total' => $search_query_obj->max_num_pages,
-                        'prev_text' => '&laquo; 前へ',
-                        'next_text' => '次へ &raquo;',
-                    ));
-                    ?>
-                </div>
-                
-                <?php wp_reset_postdata(); ?>
+</div> <!-- job-cards-containerの終了タグ -->
+
+<!-- ページネーション -->
+<div class="pagination">
+    <?php
+    echo paginate_links(array(
+        'base' => get_pagenum_link(1) . '%_%',
+        'format' => 'page/%#%/',
+        'current' => max(1, get_query_var('paged')),
+        'total' => $search_query_obj->max_num_pages,
+        'prev_text' => '&laquo; 前へ',
+        'next_text' => '次へ &raquo;',
+    ));
+    ?>
+</div>
+
+<?php wp_reset_postdata(); ?>
                 
             <?php else: ?>
                 <div class="no-jobs-found">
