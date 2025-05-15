@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name:  求人アーカイブ・検索結果表示用テンプレート
+ * Template Name: 求人アーカイブ・検索結果表示用テンプレート
  */
 get_header();
 
@@ -119,34 +119,33 @@ if (!empty($search_query)) {
     $conditions[] = '"' . $search_query . '"';
 }
 
-// カスタムクエリを実行
-if (!empty($tax_query) || !empty($search_query)) {
-    // メインクエリを変更
-    global $wp_query;
-    
-    // 現在のページネーション情報を保持
-    $paged = get_query_var('paged') ? get_query_var('paged') : 1;
-    
-    $args = array(
-        'post_type' => 'job',
-        'posts_per_page' => 10,
-        'paged' => $paged,
-    );
+// メインクエリを変更
+global $wp_query;
 
-    // タクソノミークエリの追加
-    if (!empty($tax_query)) {
-        $args['tax_query'] = $tax_query;
-    }
-    
-    // 検索キーワードがある場合
-    if (!empty($search_query)) {
-        $args['s'] = $search_query;
-    }
-    
-    // クエリを上書き
-    $wp_query = new WP_Query($args);
+// 現在のページネーション情報を保持
+$paged = get_query_var('paged') ? get_query_var('paged') : 1;
+
+$args = array(
+    'post_type' => 'job',
+    'posts_per_page' => 10,
+    'paged' => $paged,
+);
+
+// タクソノミークエリの追加
+if (!empty($tax_query)) {
+    $args['tax_query'] = $tax_query;
 }
+
+// 検索キーワードがある場合
+if (!empty($search_query)) {
+    $args['s'] = $search_query;
+}
+
+// クエリを上書き - 条件にかかわらず常に実行
+$wp_query = new WP_Query($args);
 ?>
+
+<!-- ここ以下は元のコードと同じ -->
 
 <style>
 /* サイドバー非表示用のスタイル */

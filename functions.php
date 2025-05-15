@@ -1736,6 +1736,14 @@ function add_custom_job_rewrite_rules() {
         'index.php?post_type=job&job_position=$matches[1]',
         'top'
     );
+	
+    // 基本の求人アーカイブページ用のルール
+    add_rewrite_rule(
+        'jobs/?$',
+        'index.php?post_type=job',
+        'top'
+    );
+	
 }
 add_action('init', 'add_custom_job_rewrite_rules');
 
