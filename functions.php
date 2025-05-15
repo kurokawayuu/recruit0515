@@ -1919,3 +1919,172 @@ function job_custom_search_distinct($distinct, $query) {
     return $distinct;
 }
 add_filter('posts_distinct', 'job_custom_search_distinct', 10, 2);
+
+
+// スライダーカスタム投稿タイプの登録
+function register_slider_post_type() {
+    $labels = array(
+        'name'                  => 'スライダー',
+        'singular_name'         => 'スライド',
+        'menu_name'             => 'スライダー',
+        'name_admin_bar'        => 'スライド',
+        'archives'              => 'スライドアーカイブ',
+        'attributes'            => 'スライド属性',
+        'all_items'             => 'すべてのスライド',
+        'add_new_item'          => '新しいスライドを追加',
+        'add_new'               => '新規追加',
+        'new_item'              => '新しいスライド',
+        'edit_item'             => 'スライドを編集',
+        'update_item'           => 'スライドを更新',
+        'view_item'             => 'スライドを表示',
+        'view_items'            => 'スライドを表示',
+        'search_items'          => 'スライドを検索',
+    );
+    
+    $args = array(
+        'label'                 => 'スライド',
+        'labels'                => $labels,
+        'supports'              => array('title'),  // タイトルのみサポート
+        'hierarchical'          => false,
+        'public'                => true,
+        'show_ui'               => true,
+        'show_in_menu'          => true,
+        'menu_position'         => 20,
+        'menu_icon'             => 'dashicons-images-alt2',
+        'show_in_admin_bar'     => true,
+        'show_in_nav_menus'     => false,
+        'can_export'            => true,
+        'has_archive'           => false,
+        'exclude_from_search'   => true,
+        'publicly_queryable'    => true,
+        'capability_type'       => 'post',
+        'show_in_rest'          => true,
+    );
+    
+    register_post_type('slide', $args);
+}
+add_action('init', 'register_slider_post_type');
+
+// スライド用のカスタムフィールドを追加
+function slider_custom_meta_boxes() {
+    add_meta_box(
+        'slider_settings',
+        'スライド設定',
+        'slider_settings_callback',
+        'slide',
+        'normal',
+        'high'
+    );
+}
+add_action('add_meta_boxes', 'slider_custom_meta_boxes');
+
+// スライド設定のコールバック関数
+function slider_settings_callback($post) {
+    wp_nonce_field(basename(__FILE__), 'slider_nonce');
+    
+    // 保存された値を取得
+    $slide_image_id = get_post_meta($post->ID, 'slide_image_id', true);
+    $slide_image_url = wp_get_attachment_image_url($slide_image_id, 'full');
+    $slide_link = get_post_meta($post->ID, 'slide_link', true);
+    
+    ?>
+    <div class="slider-settings-container" style="margin-bottom: 20px;">
+        <p>
+            <label for="slide_image"><strong>スライド画像：</strong></label><br>
+            <input type="hidden" name="slide_image_id" id="slide_image_id" value="<?php echo esc_attr($slide_image_id); ?>" />
+            <button type="button" class="button" id="slide_image_button">画像を選択</button>
+            <button type="button" class="button" id="slide_image_remove" style="<?php echo empty($slide_image_id) ? 'display:none;' : ''; ?>">画像を削除</button>
+            
+            <div id="slide_image_preview" style="margin-top: 10px; <?php echo empty($slide_image_url) ? 'display:none;' : ''; ?>">
+                <img src="<?php echo esc_url($slide_image_url); ?>" alt="スライド画像" style="max-width: 300px; height: auto;" />
+            </div>
+        </p>
+        
+        <p>
+            <label for="slide_link"><strong>スライドリンク：</strong></label><br>
+            <input type="url" name="slide_link" id="slide_link" value="<?php echo esc_url($slide_link); ?>" style="width: 100%;" />
+            <span class="description">スライドをクリックした時に移動するURLを入力してください。空白の場合はリンクしません。</span>
+        </p>
+    </div>
+    
+    <script>
+    jQuery(document).ready(function($) {
+        // 画像選択ボタンのクリックイベント
+        $('#slide_image_button').click(function(e) {
+            e.preventDefault();
+            
+            var image_frame;
+            
+            // MediaUploader インスタンスが既に存在する場合は再利用
+            if (image_frame) {
+                image_frame.open();
+                return;
+            }
+            
+            // MediaUploader の設定と作成
+            image_frame = wp.media({
+                title: 'スライド画像を選択',
+                button: {
+                    text: '画像を使用'
+                },
+                multiple: false
+            });
+            
+            // 画像が選択されたときの処理
+            image_frame.on('select', function() {
+                var attachment = image_frame.state().get('selection').first().toJSON();
+                $('#slide_image_id').val(attachment.id);
+                
+                // プレビュー更新
+                $('#slide_image_preview img').attr('src', attachment.url);
+                $('#slide_image_preview').show();
+                $('#slide_image_remove').show();
+            });
+            
+            // MediaUploader を開く
+            image_frame.open();
+        });
+        
+        // 画像削除ボタンのクリックイベント
+        $('#slide_image_remove').click(function(e) {
+            e.preventDefault();
+            $('#slide_image_id').val('');
+            $('#slide_image_preview').hide();
+            $(this).hide();
+        });
+    });
+    </script>
+    <?php
+}
+
+// スライド設定を保存
+function save_slider_meta($post_id) {
+    // 自動保存の場合は処理しない
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    
+    // nonce を確認
+    if (!isset($_POST['slider_nonce']) || !wp_verify_nonce($_POST['slider_nonce'], basename(__FILE__))) return;
+    
+    // 権限を確認
+    if (!current_user_can('edit_post', $post_id)) return;
+    
+    // スライド画像IDを保存
+    if (isset($_POST['slide_image_id'])) {
+        update_post_meta($post_id, 'slide_image_id', sanitize_text_field($_POST['slide_image_id']));
+    }
+    
+    // スライドリンクを保存
+    if (isset($_POST['slide_link'])) {
+        update_post_meta($post_id, 'slide_link', esc_url_raw($_POST['slide_link']));
+    }
+}
+add_action('save_post_slide', 'save_slider_meta');
+
+// MediaUploader のスクリプトを読み込む
+function slider_admin_scripts() {
+    global $post_type;
+    if ('slide' === $post_type) {
+        wp_enqueue_media();
+    }
+}
+add_action('admin_enqueue_scripts', 'slider_admin_scripts');

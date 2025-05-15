@@ -8,29 +8,76 @@
  */
 if (!defined('ABSPATH')) exit; ?>
 <?php get_header(); ?>
-<main class="main-content">
-        <div class="slider-container">
-            <div class="slider">
-                <div class="slide" id="slide1">
-                    <!-- スライド1のコンテンツ -->
-                </div>
-                <div class="slide" id="slide2">
-                    <!-- スライド2のコンテンツ -->
-                </div>
-                <div class="slide" id="slide3">
-                    <!-- スライド3のコンテンツ -->
-                </div>
-            </div>
-            <div class="slider-nav">
-                <button class="prev-btn">❮</button>
-                <button class="next-btn">❯</button>
-            </div>
-            <div class="slider-dots">
-                <span class="dot active" data-slide="0"></span>
-                <span class="dot" data-slide="1"></span>
-                <span class="dot" data-slide="2"></span>
-            </div>
+
+<!-- 完全シンプル化したスライダー -->
+<div class="simple-slider-container">
+  <!-- 前後のスライド操作ボタン -->
+  <button class="slider-nav-btn prev">❮</button>
+  <button class="slider-nav-btn next">❯</button>
+
+  <!-- スライダー本体 -->
+  <div class="simple-slider">
+    <?php
+    $args = array(
+      'post_type'      => 'slide',
+      'posts_per_page' => -1,
+      'orderby'        => 'menu_order',
+      'order'          => 'ASC'
+    );
+    $slides = new WP_Query($args);
+    
+    if ($slides->have_posts()) :
+      $slide_count = 0;
+      while ($slides->have_posts()) : $slides->the_post();
+        $slide_count++;
+        $slide_image_id = get_post_meta(get_the_ID(), 'slide_image_id', true);
+        $slide_image_url = wp_get_attachment_image_url($slide_image_id, 'full');
+        $slide_link = get_post_meta(get_the_ID(), 'slide_link', true);
+        
+        if (!empty($slide_image_url)) :
+        ?>
+        <div class="simple-slide" id="slide<?php echo $slide_count; ?>">
+          <?php if (!empty($slide_link)) : ?>
+          <a href="<?php echo esc_url($slide_link); ?>" class="slide-link">
+          <?php endif; ?>
+            <img src="<?php echo esc_url($slide_image_url); ?>" alt="<?php echo esc_attr(get_the_title()); ?>">
+          <?php if (!empty($slide_link)) : ?>
+          </a>
+          <?php endif; ?>
         </div>
+        <?php
+        endif;
+      endwhile;
+      wp_reset_postdata();
+    else :
+      // デモスライド
+      for ($i = 1; $i <= 3; $i++) :
+      ?>
+      <div class="simple-slide" id="slide<?php echo $i; ?>">
+        <div class="demo-slide">
+          <h2>スライド <?php echo $i; ?></h2>
+          <p>管理画面で「スライダー」からスライドを追加してください</p>
+        </div>
+      </div>
+      <?php
+      endfor;
+    endif;
+    ?>
+  </div>
+
+  <!-- ドットナビゲーション -->
+  <div class="slider-dots">
+    <?php 
+    $total_slides = $slides->post_count > 0 ? $slides->post_count : 3;
+    for ($i = 0; $i < $total_slides; $i++) : 
+    ?>
+      <span class="slider-dot<?php echo $i === 0 ? ' active' : ''; ?>" data-index="<?php echo $i; ?>"></span>
+    <?php endfor; ?>
+  </div>
+</div>
+
+<main class="main-content">
+<!-- 以下、元のfront-page.phpの内容 -->
         
 <!-- 求人検索 -->
 <?php get_template_part('search', 'form'); ?>
