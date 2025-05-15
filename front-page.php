@@ -237,8 +237,9 @@ $facility_address = preg_replace('/〒\d{3}-\d{4}\s*/', '', $facility_address); 
         <!-- 求人カード -->
         <div class="jo-card">
           <div class="jo-header">
-            <div class="cmpany-name">
-              <p><?php echo esc_html($facility_name); ?></p>
+<div class="cmpany-name">
+	<p class="bold-text"><?php echo esc_html($facility_name); ?></p>
+
               <p><?php echo esc_html($facility_company); ?></p>
             </div>
             <div class="employment-type <?php echo $type_class; ?>">
@@ -250,8 +251,11 @@ $facility_address = preg_replace('/〒\d{3}-\d{4}\s*/', '', $facility_address); 
           </div>
           <div class="job-info">
             <h3 class="job-title"><?php echo esc_html($position_name); ?></h3>
-            <p class="job-location"><?php echo esc_html($facility_address); ?></p>
-            <p class="job-salary">
+			  <div class="info-item">
+                                    <span class="info-icon"><i class="fa-solid fa-location-dot"></i></span>
+           <p class="job-location"> <?php echo esc_html($facility_address); ?></p></div>
+            <div class="info-item">
+    <span class="info-icon"><i class="fa-solid fa-money-bill-wave"></i></span><p class="job-salary">
   <?php 
   // 賃金形態を取得（MONTH/HOUR）
   $salary_type = get_post_meta(get_the_ID(), 'salary_type', true);
@@ -273,7 +277,7 @@ $facility_address = preg_replace('/〒\d{3}-\d{4}\s*/', '', $facility_address); 
     echo '円';
   }
   ?>
-</p>
+</p></div>
             <div class="job-tags">
               <?php if (!empty($job_features)) : 
                 $count = 0;
@@ -363,17 +367,17 @@ $facility_address = preg_replace('/〒\d{3}-\d{4}\s*/', '', $facility_address); 
 <section class="matching-section">
   <div class="matching-container">
     <h2 class="matching-title">あなたにぴったりの求人情報を見てみよう</h2>
-    <p class="matching-desc">あなたのスキルや経験、希望に合った求人情報を閲覧できます。会員登録をして、簡単に応募を行うましょう。</p>
+    <p class="matching-desc">あなたのスキルや経験、希望に合った求人情報を閲覧できます。<br>会員登録をして、簡単に応募を行うましょう。</p>
     <div class="matching-image">
-      <img src="<?php echo get_stylesheet_directory_uri(); ?>/img/matching-puzzle.png" alt="マッチング">
+      <img src="<?php echo get_stylesheet_directory_uri(); ?>/img/matching-puzzle.webp" alt="マッチング">
     </div>
     <div class="matching-label">matching</div>
-    <a href="#" class="register-large-btn">
-      <span class="btn-icon">○</span>
-      登録して情報を見る
+    <a href="<?php echo is_user_logged_in() ? '/members/' : '/register/'; ?>" class="register-large-btn">
+      <span class="btn-icon">▶</span>登録して情報を見る
     </a>
   </div>
 </section>
+
 
 <!-- 職種ごとのリンク処理 -->
 <script>

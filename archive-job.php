@@ -171,10 +171,12 @@ $wp_query = new WP_Query($args);
     display: inline-block;
 }
 .employment-type.full-time-color {
-    background-color: #4CAF50 !important; /* 正社員 */
+  background-color: #C5E5FF;
+  color: #5599FF;
 }
 .employment-type.part-time-color {
-    background-color: #FFC107 !important; /* パート・アルバイト */
+  background-color: #FFD5F9;
+  color: #F58284;
 }
 .employment-type.contract-color {
     background-color: #9C27B0 !important; /* 契約社員 */

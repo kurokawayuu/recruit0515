@@ -3,7 +3,7 @@
 //JavaScriptやjQueryで親テーマのjavascript.jsに加えて関数を記入したい時に使用します。
 
 /**
- * 完全シンプル化スライダー
+ * 無限ループカルーセルスライダー（左右のスライドが見えるバージョン）
  */
 document.addEventListener('DOMContentLoaded', function() {
   // 覗き見スライダー
@@ -19,37 +19,89 @@ document.addEventListener('DOMContentLoaded', function() {
   const slideCount = slides.length;
   let autoplayTimer = null;
   
-  // スライドの幅を計算（パディングを含む）
-  function getSlideWidth() {
-    return slider.offsetWidth;
+  // クローンを作成してスライダーの前後に追加
+  function setupInfiniteLoop() {
+    // 各スライドにIDを追加する
+    slides.forEach((slide, index) => {
+      slide.setAttribute('data-index', index);
+    });
+    
+    // 最初のスライドのクローンを作成して最後に追加
+    const firstSlideClone = slides[0].cloneNode(true);
+    firstSlideClone.setAttribute('data-clone', 'true');
+    slider.appendChild(firstSlideClone);
+    
+    // 最後のスライドのクローンを作成して最初に追加
+    const lastSlideClone = slides[slideCount - 1].cloneNode(true);
+    lastSlideClone.setAttribute('data-clone', 'true');
+    slider.insertBefore(lastSlideClone, slides[0]);
+    
+    // 初期位置を調整（クローンを考慮して1つ右にずらす）
+    currentIndex = 1;
+    updateSlider(false);
   }
   
   // スライドを更新
-  function updateSlider() {
-    const slideWidth = getSlideWidth();
-    slider.style.transform = `translateX(${-currentIndex * slideWidth}px)`;
+  function updateSlider(withTransition = true) {
+    // トランジションの有無を設定
+    if (withTransition) {
+      slider.style.transition = 'transform 0.5s ease';
+    } else {
+      slider.style.transition = 'none';
+    }
+    
+    // スライド全体の幅を考慮
+    // 各スライドの幅はCSSで設定（デフォルト80%、小画面では70%）
+    // 実際の移動量は1スライドあたり100%
+    slider.style.transform = `translateX(${-currentIndex * 100}%)`;
+    
+    // 実際のインデックス（クローンを除く）を計算
+    const realIndex = (currentIndex - 1 + slideCount) % slideCount;
     
     // ドットを更新
     dots.forEach((dot, index) => {
-      dot.classList.toggle('active', index === currentIndex);
+      dot.classList.toggle('active', index === realIndex);
+    });
+    
+    // アクティブスライドのクラスを更新（必要な場合）
+    const allSlides = document.querySelectorAll('.peek-slide');
+    allSlides.forEach((slide, index) => {
+      slide.classList.toggle('active', index === currentIndex);
     });
   }
   
   // 次のスライドへ
   function goToNextSlide() {
-    currentIndex = (currentIndex + 1) % slideCount;
+    currentIndex++;
     updateSlider();
+    
+    // 最後のクローンに到達したら、トランジション後に最初のスライドに瞬時に戻す
+    if (currentIndex === slideCount + 1) {
+      setTimeout(() => {
+        currentIndex = 1;
+        updateSlider(false);
+      }, 500);
+    }
   }
   
   // 前のスライドへ
   function goToPrevSlide() {
-    currentIndex = (currentIndex - 1 + slideCount) % slideCount;
+    currentIndex--;
     updateSlider();
+    
+    // 最初のクローンに到達したら、トランジション後に最後のスライドに瞬時に戻す
+    if (currentIndex === 0) {
+      setTimeout(() => {
+        currentIndex = slideCount;
+        updateSlider(false);
+      }, 500);
+    }
   }
   
-  // 特定のスライドへ移動
+  // 特定のスライドへ移動（ドットクリック用）
   function goToSlide(index) {
-    currentIndex = index;
+    // インデックスを実際のスライド位置に変換（クローンを考慮）
+    currentIndex = index + 1;
     updateSlider();
   }
   
@@ -88,6 +140,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   
+  // トランジション終了時のイベント
+  slider.addEventListener('transitionend', function() {
+    // 最後のクローンに到達したら、最初のスライドに瞬時に戻す
+    if (currentIndex === slideCount + 1) {
+      currentIndex = 1;
+      updateSlider(false);
+    }
+    // 最初のクローンに到達したら、最後のスライドに瞬時に戻す
+    else if (currentIndex === 0) {
+      currentIndex = slideCount;
+      updateSlider(false);
+    }
+  });
+  
   // タッチスワイプの処理
   let touchStartX = 0;
   let touchEndX = 0;
@@ -113,10 +179,12 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // ウィンドウサイズ変更時に更新
-  window.addEventListener('resize', updateSlider);
+  window.addEventListener('resize', function() {
+    updateSlider(false);
+  });
   
   // 初期化
-  updateSlider();
+  setupInfiniteLoop();
   startAutoplay();
 });
 /**

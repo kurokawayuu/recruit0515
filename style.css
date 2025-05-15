@@ -41,6 +41,9 @@ header {
 .header-top {
     padding: 10px 20px;
     background-color: #fffdfa;
+	align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .site-title {
@@ -896,10 +899,9 @@ nav {
 .main-content {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
 }
 
-/* === 覗き見スライダー === */
+/* === 覗き見スライダー（無限ループと左右表示対応版） === */
 .peek-slider-wrapper {
   width: 100vw;
   margin-left: calc(50% - 50vw);
@@ -915,17 +917,20 @@ nav {
   max-width: 1300px;
   margin: 0 auto;
   padding: 0 10px;
+  overflow: visible; /* 左右のスライドが見えるようにする */
 }
 
 .peek-slider-container {
   display: flex;
   transition: transform 0.5s ease;
   height: 400px;
+  overflow: visible; /* 左右のスライドが見えるようにする */
 }
 
 .peek-slide {
-  flex: 0 0 100%;
-  padding: 0 10%;
+  width: calc(100% - 200px); /* 左右に100pxずつ見せるために、全体から200px引く */
+  flex: 0 0 auto; /* 自動サイズではなく固定サイズを使用 */
+  margin: 0 100px; /* 左右に100pxずつのマージンを設定 */
   box-sizing: border-box;
   position: relative;
 }
@@ -937,6 +942,7 @@ nav {
   border-radius: 10px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
+
 
 .demo-slide {
   width: 100%;
@@ -1008,13 +1014,26 @@ nav {
   transform: scale(1.2);
 }
 
+@media (max-width: 1280px) {
+  .peek-slider {
+    max-width: 100%;
+  }
+  
+  .peek-slide {
+    flex: 0 0 85%; /* 幅を85%に設定して左右により多く見えるようにする */
+    margin: 0 7.5%; /* 左右のマージンを7.5%に */
+  }
+}
+
+/* スマートフォン用の調整 */
 @media (max-width: 768px) {
   .peek-slider-container {
     height: 300px;
   }
   
   .peek-slide {
-    padding: 0 5%;
+    width: calc(100% - 100px); /* 小さい画面では左右に50pxずつ */
+    margin: 0 50px;
   }
   
   .peek-slider-button {
@@ -1030,7 +1049,8 @@ nav {
   }
   
   .peek-slide {
-    padding: 0 2%;
+    width: calc(100% - 60px); /* 超小さい画面では左右に30pxずつ */
+    margin: 0 30px;
   }
   
   .peek-slider-button {
@@ -1130,7 +1150,6 @@ nav {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  max-width: 1000px;
   margin: 0 auto;
 }
 
@@ -1189,7 +1208,6 @@ nav {
     justify-content: space-between;
     gap: 20px;
     width: 100%;
-    max-width: 1000px;
     margin: 0 auto;
 }
 
@@ -1276,7 +1294,6 @@ nav {
 
 .new-jobs .section-title {
   text-align: center;
-  margin-bottom: 30px;
   font-size: 24px;
   font-weight: bold;
   color: #333;
@@ -1327,53 +1344,82 @@ nav {
 
 .jo-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-start;
   padding: 15px;
   background-color: #fff;
-  border-bottom: 1px solid #eee;
-  height: 70px; /* ヘッダー高さを増やす */
+  height: 70px;
+  gap: 20px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-icon {
+    width: 20px;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .cmpany-name {
   font-size: 14px;
   color: #333;
   margin: 0;
-  width: 70%; /* 幅を制限 */
+  width: 70%;
   height: 100%; /* 高さを100%に */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 
+
 .cmpany-name p {
-  margin: 0;
-  padding: 0 0 5px; /* 下部に余白を追加 */
-  line-height: 1.4;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis; /* 長いテキストは省略 */
+    margin: 0;
+    padding: 0 0 5px;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+
+.bold-text {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+
 .employment-type {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
   padding: 5px 15px;
   border-radius: 20px;
-  font-size: 12px;
   font-weight: bold;
-  color: #333;
+  color: #fff;
   display: inline-block;
 }
 
+
 .employment-type.full-time {
-  background-color: #cae7fd;
+  background-color: #C5E5FF;
+  color: #5599FF;
 }
 
 .employment-type.part-time {
   background-color: #FFD5F9;
+  color: #F58284;
 }
 
 .employment-type.other {
   background-color: #D5FFEC;
+  color: #0FB96A;
 }
 
 .job-image {
@@ -1452,25 +1498,25 @@ nav {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 130px; /* タグの最大幅 */
+  max-width: 130px;
 }
 
 .job-footer {
   padding: 15px;
   border-top: 1px solid #eee;
-  height: 60px; /* フッター高さ固定 */
+  height: 60px;
   box-sizing: border-box;
+  background-color: #1DD1B0; 
 }
 
 .detail-btn {
   display: block;
   width: 100%;
-  padding: 10px 15px;
   text-align: right;
-  color: #26b7a0;
+  color: #fff;
   text-decoration: none;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 16px;
   transition: color 0.3s ease;
   position: relative;
 }
@@ -1482,7 +1528,7 @@ nav {
 }
 
 .detail-btn:hover {
-  color: #1a8a77;
+  color: #ffb74d;
 }
 
 /* ナビゲーションボタン - カードの外側に配置 */
@@ -1582,7 +1628,7 @@ nav {
 
 /* サイト案内 */
 .about-site {
-  padding: 80px 0;
+  padding: 150px 0;
   background-color: #fff;
 }
 
@@ -1673,17 +1719,16 @@ nav {
 
 .matching-title {
   font-size: 24px;
-  margin-bottom: 20px;
 }
 
 .matching-desc {
-  font-size: 14px;
+  font-size: 16px;
   margin-bottom: 30px;
   line-height: 1.8;
 }
 
 .matching-image {
-  width: 100px;
+  width: 200px;
   margin: 0 auto 15px;
 }
 
@@ -1692,7 +1737,7 @@ nav {
 }
 
 .matching-label {
-  font-size: 16px;
+  font-size: 20px;
   margin-bottom: 30px;
   letter-spacing: 2px;
 }
@@ -1700,11 +1745,11 @@ nav {
 .register-large-btn {
   display: inline-block;
   background-color: #fff;
-  color: #1DD1B0;
+  color: #FFBD59;
   padding: 15px 40px;
   border-radius: 50px;
   font-weight: bold;
-  font-size: 16px;
+  font-size: 20px;
   transition: background-color 0.3s, color 0.3s;
 }
 
