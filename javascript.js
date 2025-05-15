@@ -6,136 +6,118 @@
  * 完全シンプル化スライダー
  */
 document.addEventListener('DOMContentLoaded', function() {
-  // 要素の取得
-  const slides = document.querySelectorAll('.simple-slide');
-  const prevBtn = document.querySelector('.slider-nav-btn.prev');
-  const nextBtn = document.querySelector('.slider-nav-btn.next');
-  const dots = document.querySelectorAll('.slider-dot');
+  // 覗き見スライダー
+  const slider = document.querySelector('.peek-slider-container');
+  const slides = document.querySelectorAll('.peek-slide');
+  const prevButton = document.querySelector('.peek-slider-button.prev');
+  const nextButton = document.querySelector('.peek-slider-button.next');
+  const dots = document.querySelectorAll('.peek-slider-dot');
   
-  // スライドがなければ終了
-  if (!slides.length) return;
+  if (!slider || slides.length === 0) return;
   
-  // 変数
   let currentIndex = 0;
-  const totalSlides = slides.length;
-  let autoSlideTimer = null;
+  const slideCount = slides.length;
+  let autoplayTimer = null;
   
-  // スライド状態の更新
-  function updateSlides() {
-    // 全スライドの状態リセット
-    slides.forEach(slide => {
-      slide.classList.remove('active', 'prev', 'next');
-    });
+  // スライドの幅を計算（パディングを含む）
+  function getSlideWidth() {
+    return slider.offsetWidth;
+  }
+  
+  // スライドを更新
+  function updateSlider() {
+    const slideWidth = getSlideWidth();
+    slider.style.transform = `translateX(${-currentIndex * slideWidth}px)`;
     
-    // 現在のスライド
-    slides[currentIndex].classList.add('active');
-    
-    // 前のスライド
-    const prevIndex = (currentIndex - 1 + totalSlides) % totalSlides;
-    slides[prevIndex].classList.add('prev');
-    
-    // 次のスライド
-    const nextIndex = (currentIndex + 1) % totalSlides;
-    slides[nextIndex].classList.add('next');
-    
-    // ドットの更新
-    dots.forEach((dot, i) => {
-      dot.classList.toggle('active', i === currentIndex);
+    // ドットを更新
+    dots.forEach((dot, index) => {
+      dot.classList.toggle('active', index === currentIndex);
     });
   }
   
   // 次のスライドへ
   function goToNextSlide() {
-    currentIndex = (currentIndex + 1) % totalSlides;
-    updateSlides();
+    currentIndex = (currentIndex + 1) % slideCount;
+    updateSlider();
   }
   
   // 前のスライドへ
   function goToPrevSlide() {
-    currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
-    updateSlides();
+    currentIndex = (currentIndex - 1 + slideCount) % slideCount;
+    updateSlider();
   }
   
-  // 特定のスライドへ
+  // 特定のスライドへ移動
   function goToSlide(index) {
     currentIndex = index;
-    updateSlides();
+    updateSlider();
   }
   
-  // 自動再生開始
-  function startAutoSlide() {
-    stopAutoSlide();
-    autoSlideTimer = setInterval(goToNextSlide, 5000);
+  // 自動再生の開始
+  function startAutoplay() {
+    stopAutoplay();
+    autoplayTimer = setInterval(goToNextSlide, 5000);
   }
   
-  // 自動再生停止
-  function stopAutoSlide() {
-    if (autoSlideTimer) {
-      clearInterval(autoSlideTimer);
-      autoSlideTimer = null;
+  // 自動再生の停止
+  function stopAutoplay() {
+    if (autoplayTimer) {
+      clearInterval(autoplayTimer);
+      autoplayTimer = null;
     }
   }
   
-  // ボタンイベント
-  if (prevBtn) {
-    prevBtn.addEventListener('click', function() {
-      goToPrevSlide();
-      stopAutoSlide();
-      startAutoSlide();
-    });
-  }
+  // イベントリスナーの追加
+  prevButton.addEventListener('click', function() {
+    goToPrevSlide();
+    stopAutoplay();
+    startAutoplay();
+  });
   
-  if (nextBtn) {
-    nextBtn.addEventListener('click', function() {
-      goToNextSlide();
-      stopAutoSlide();
-      startAutoSlide();
-    });
-  }
+  nextButton.addEventListener('click', function() {
+    goToNextSlide();
+    stopAutoplay();
+    startAutoplay();
+  });
   
-  // ドットイベント
   dots.forEach((dot, index) => {
     dot.addEventListener('click', function() {
       goToSlide(index);
-      stopAutoSlide();
-      startAutoSlide();
+      stopAutoplay();
+      startAutoplay();
     });
   });
   
-  // タッチイベント
-  const sliderContainer = document.querySelector('.simple-slider-container');
+  // タッチスワイプの処理
+  let touchStartX = 0;
+  let touchEndX = 0;
   
-  if (sliderContainer) {
-    let touchStartX = 0;
-    
-    sliderContainer.addEventListener('touchstart', function(e) {
-      touchStartX = e.changedTouches[0].clientX;
-      stopAutoSlide();
-    }, { passive: true });
-    
-    sliderContainer.addEventListener('touchend', function(e) {
-      const touchEndX = e.changedTouches[0].clientX;
-      const diff = touchEndX - touchStartX;
-      
-      if (diff > 50) {
-        // 右スワイプ - 前へ
-        goToPrevSlide();
-      } else if (diff < -50) {
-        // 左スワイプ - 次へ
-        goToNextSlide();
-      }
-      
-      startAutoSlide();
-    }, { passive: true });
-    
-    // マウスイベント
-    sliderContainer.addEventListener('mouseenter', stopAutoSlide);
-    sliderContainer.addEventListener('mouseleave', startAutoSlide);
+  slider.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].clientX;
+    stopAutoplay();
+  }, { passive: true });
+  
+  slider.addEventListener('touchend', function(e) {
+    touchEndX = e.changedTouches[0].clientX;
+    handleSwipe();
+    startAutoplay();
+  }, { passive: true });
+  
+  function handleSwipe() {
+    const SWIPE_THRESHOLD = 50;
+    if (touchStartX - touchEndX > SWIPE_THRESHOLD) {
+      goToNextSlide();
+    } else if (touchEndX - touchStartX > SWIPE_THRESHOLD) {
+      goToPrevSlide();
+    }
   }
   
+  // ウィンドウサイズ変更時に更新
+  window.addEventListener('resize', updateSlider);
+  
   // 初期化
-  updateSlides();
-  startAutoSlide();
+  updateSlider();
+  startAutoplay();
 });
 /**
  * 求人検索フォーム用のJavaScript
